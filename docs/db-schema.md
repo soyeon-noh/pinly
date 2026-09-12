@@ -232,8 +232,10 @@ status 값(CHECK 제약):
 
 ## 5. 검증 체크리스트
 
-- [ ] 로컬 PostgreSQL에 `V1` 마이그레이션 적용 성공
-- [ ] 모든 FK/UNIQUE/CHECK 제약 반영
-- [ ] JSONB 컬럼(canvas.document, plan.features, notification.payload, notification_setting.preferences) 매핑 확인
-- [ ] enum 값과 CHECK 제약이 일치
-- [ ] 엔티티 컴파일 및 애플리케이션 부팅 성공
+- [x] 로컬 PostgreSQL에 `V1` 마이그레이션 적용 성공 — Testcontainers(`postgres:16-alpine`)로 `MigrationTest`에서 검증
+- [x] 모든 FK/UNIQUE/CHECK 제약 반영
+- [x] JSONB 컬럼(canvas.document, plan.features, notification.payload, notification_setting.preferences) 매핑 확인 — `CanvasPersistenceTest`에서 중첩 구조 왕복 및 JSONB 연산자 조회 검증
+- [x] enum 값과 CHECK 제약이 일치 — `FeedbackPersistenceTest`가 `FeedbackStatus.values()`를 전부 삽입해 확인
+- [x] 엔티티 컴파일 및 애플리케이션 부팅 성공 — `spring.jpa.hibernate.ddl-auto=validate`로 스키마 불일치 시 부팅 실패
+
+> 이후 스키마 변경은 **작성된 마이그레이션을 고치지 않고 새 버전(`V3__...`)을 추가**한다.

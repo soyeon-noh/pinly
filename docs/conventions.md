@@ -116,13 +116,16 @@ FeedbackStatus에서 검증해 BusinessException으로 막는다.
 |---|---|---|
 | 도메인 로직, 상태 전이, 순수 계산 | 애노테이션 없는 POJO 테스트 (+ Mockito) | 없음 |
 | Service 단위 | `@ExtendWith(MockitoExtension.class)` | 없음 |
-| Repository, JSONB 매핑, 마이그레이션 | `@DataJpaTest` + `@Import(TestcontainersConfiguration.class)` | 실제 PostgreSQL |
+| Repository, JSONB 매핑, 마이그레이션 | `@PostgresJpaTest` | 실제 PostgreSQL |
 | Controller / 직렬화 / 검증 | `@WebMvcTest` + `MockMvc` | 없음 |
 | 인수·통합 시나리오 | `@SpringBootTest` + `@Import(TestcontainersConfiguration.class)` | 실제 PostgreSQL |
 
 - **H2는 쓰지 않는다.** `JSONB`, `GIN` 인덱스, `gen_random_uuid()`를 지원하지 않아 마이그레이션이 프로덕션과 달라진다.
 - PostgreSQL 컨테이너는 `src/test/java/com/kodeongee/pinly/support/TestcontainersConfiguration.java` 한 곳에서 정의하고 `@ServiceConnection`으로 주입한다. 테스트마다 컨테이너를 새로 만들지 않는다.
 - 컨테이너 이미지는 `postgres:16-alpine` 고정.
+- DB가 필요한 슬라이스 테스트는 `support/PostgresJpaTest` 합성 애노테이션을 붙인다. `@DataJpaTest`는 기본적으로 DataSource를 내장 DB로 교체하려 하는데, 이 애노테이션이 그 교체를 끄고(`@AutoConfigureTestDatabase(replace = NONE)`) 컨테이너를 물린다.
+- 반복 픽스처는 `support/TestFixtures`에 모은다. 검증 대상이 아닌 필드는 기본값으로 채운다.
+- 엔티티와 마이그레이션이 어긋나면 부팅이 실패하도록 `spring.jpa.hibernate.ddl-auto=validate`를 켜 두었다. **Hibernate는 DDL을 만들지 않는다** — 스키마를 바꾸는 유일한 수단은 Flyway 마이그레이션이다.
 
 ### 작성 규칙
 
@@ -132,6 +135,18 @@ FeedbackStatus에서 검증해 BusinessException으로 막는다.
 - 단정은 **AssertJ** (`assertThat`). JUnit `Assertions`나 Hamcrest는 쓰지 않는다
 - 예외는 `assertThatThrownBy(...).isInstanceOf(...)`로 타입까지 검증
 - 테스트 간 상태 공유 금지. `@Transactional` 롤백에 의존하는 통합 테스트는 지양하고 필요한 데이터를 직접 만든다
+
+### 스택 주의사항 (Spring Boot 4 / Testcontainers 2)
+
+버전이 앞서 있어 검색으로 나오는 예제 코드 대부분과 좌표·패키지가 다르다.
+
+- Testcontainers 2.x는 모듈 좌표가 `org.testcontainers:testcontainers-*` 로 바뀌었다 (`org.testcontainers:postgresql` → `testcontainers-postgresql`)
+- 컨테이너 클래스도 이동했다: `org.testcontainers.containers.PostgreSQLContainer`(deprecated) → **`org.testcontainers.postgresql.PostgreSQLContainer`**, 제네릭 파라미터 없음
+- Boot 4는 테스트 애노테이션 패키지를 재배치했다
+  - `@DataJpaTest` → `org.springframework.boot.data.jpa.test.autoconfigure`
+  - `TestEntityManager` → `org.springframework.boot.jpa.test.autoconfigure`
+  - `@AutoConfigureTestDatabase` → `org.springframework.boot.jdbc.test.autoconfigure`
+- Boot 4는 `spring-boot-starter-test` 하나가 아니라 모듈별 `spring-boot-starter-*-test` 로 나뉘어 있다
 
 ### 실행
 
