@@ -59,16 +59,50 @@ pinly는 **웹툰 작가 팀을 위한 이미지 기반 피드백 협업 툴**�
 - 포인트 컬러(후보 B): `#50FF99 → #FF993F`
 - 톤: 크리에이터 친화적, 깔끔·모던
 
-## 코드/작업 규칙 【채워넣기】
+## 코드/작업 규칙
 
-- 패키지 구조: 【확인 필요】 (예: `domain / controller / service / repository`)
-- 커밋 컨벤션: 【확인 필요】
-- 테스트: 【확인 필요】
-- 응답 언어: 한국어
+상세는 `docs/conventions.md`. 아래는 항상 지켜야 하는 요약.
+
+**패키지 구조 — 도메인형**
+
+```
+com.kodeongee.pinly
+├── global/{config,error,security,entity,util}          # 횡단 관심사
+└── domain/{user,project,canvas,comment,feedback,subscription,notification}
+        └── 각 도메인: {controller,service,repository,entity,dto}
+```
+
+- 다른 도메인의 Repository를 직접 주입하지 않는다 (Service → Service 로만)
+- 엔티티를 HTTP 응답으로 노출하지 않는다. 요청·응답은 `dto`의 `record`
+- 연관관계는 항상 `FetchType.LAZY`, 기본은 단방향
+- Lombok: `@Getter` / `@Builder` / `@NoArgsConstructor(PROTECTED)` / `@RequiredArgsConstructor` 만. `@Data`·`@Setter` 금지
+- 빈 패키지를 미리 만들지 않는다
+
+**커밋 컨벤션 — Conventional Commits + 한국어 본문**
+
+```
+<type>(<scope>): <한국어 요약, 50자 이내, 마침표 없음>
+
+<한국어 본문 — 무엇을 왜 바꿨는지>
+```
+
+- type: `feat` `fix` `refactor` `perf` `test` `docs` `build` `ci` `chore`
+- scope: 도메인 패키지명 / `global` / `db`, 해당 없으면 생략
+- 제목은 "~추가 / ~수정 / ~제거" 형태, 한 커밋에 한 의도
+- Claude 작성 커밋은 푸터에 `Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>`
+
+**테스트 — JUnit 5 + AssertJ + Testcontainers**
+
+- DB가 필요한 테스트는 **실제 PostgreSQL 컨테이너**를 쓴다. **H2 금지** (JSONB·GIN·`gen_random_uuid()` 미지원)
+- 컨테이너는 `support/TestcontainersConfiguration`에서만 정의하고 `@ServiceConnection`으로 주입 → `@Import`해서 재사용
+- 계층: 도메인·Service 단위는 Mockito, Repository·JSONB·마이그레이션은 `@DataJpaTest`, 웹은 `@WebMvcTest`, 통합은 `@SpringBootTest`
+- `@DisplayName`은 한국어 필수, 단정은 AssertJ, 본문은 `// given / // when / // then`
+- 완료 기준: `./gradlew test` 통과 + 새 로직에 대응하는 테스트 존재
+- Testcontainers 테스트는 Docker 데몬이 떠 있어야 한다
+
+**응답 언어**: 한국어 (설명·커밋·`@DisplayName`·주석). 코드 식별자는 영어.
 
 ## 관련 문서
+- 코드/작업 컨벤션: docs/conventions.md
 - 캔버스 JSONB 스키마: docs/canvas-schema.md
 - DB 스키마: docs/db-schema.md
----
-
-_이 문서는 사이트맵·유저플로우·브랜딩 초안을 기준으로 작성됨. 스택/규칙 항목을 확정된 값으로 채워주세요._
