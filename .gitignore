@@ -1,37 +1,16 @@
-HELP.md
-.gradle
-build/
-!gradle/wrapper/gradle-wrapper.jar
-!**/src/main/**/build/
-!**/src/test/**/build/
+# 하위 프로젝트별 규칙은 backend/.gitignore, frontend/.gitignore에 있다.
+# 여기에는 저장소 전체에 공통으로 적용할 것만 둔다.
 
-### STS ###
-.apt_generated
-.classpath
-.factorypath
-.project
-.settings
-.springBeans
-.sts4-cache
-bin/
-!**/src/main/**/bin/
-!**/src/test/**/bin/
+# OS
+.DS_Store
 
-### IntelliJ IDEA ###
-.idea
-*.iws
-*.iml
-*.ipr
-out/
-!**/src/main/**/out/
-!**/src/test/**/out/
+# Node (frontend/, frontend/frontend-demo/ 공통)
+node_modules/
+dist/
 
-### NetBeans ###
-/nbproject/private/
-/nbbuild/
-/dist/
-/nbdist/
-/.nb-gradle/
+# Claude Code — 개인 설정은 공유하지 않는다 (.claude/launch.json은 공유)
+.claude/settings.local.json
 
-### VS Code ###
+# 에디터
+.idea/
 .vscode/
