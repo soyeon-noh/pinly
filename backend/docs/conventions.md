@@ -1,7 +1,9 @@
 # pinly — 코드/작업 컨벤션
 
 > 이 문서는 Claude Code와 사람이 **동일한 규칙으로 코드를 쓰기 위한 기준**이다.
-> 요약은 루트 `CLAUDE.md`의 「코드/작업 규칙」에 있고, 상세는 여기에 둔다.
+> 요약은 저장소 루트 `CLAUDE.md`의 「코드/작업 규칙」에 있고, 상세는 여기에 둔다.
+> 저장소는 모노레포이며, 이 문서의 1·3장(패키지·테스트)은 **`backend/`** 기준이고 경로도 `backend/`에서의 상대 경로다.
+> 2장(커밋)은 저장소 전체에 적용한다.
 
 ---
 
@@ -83,8 +85,15 @@ com.kodeongee.pinly
 
 ### scope
 
-도메인 패키지 이름을 쓴다: `user` / `project` / `canvas` / `comment` / `feedback` / `subscription` / `notification`.
-횡단 관심사는 `global`, DB 마이그레이션은 `db`. 전체에 걸치거나 해당 없으면 **scope 생략**.
+| 변경 위치 | scope |
+|---|---|
+| 백엔드 도메인 | 도메인 패키지 이름: `user` / `project` / `canvas` / `comment` / `feedback` / `subscription` / `notification` |
+| 백엔드 횡단 관심사 | `global` |
+| DB 마이그레이션 | `db` |
+| 프론트엔드 (`frontend/`) | `frontend` |
+| 여러 영역에 걸치거나 해당 없음 | **생략** |
+
+백엔드 도메인 scope만으로 백엔드 변경임을 알 수 있으므로 `backend` scope는 따로 두지 않는다.
 
 ### 규칙
 

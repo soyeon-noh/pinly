@@ -1,8 +1,7 @@
 # pinly — 프로젝트 컨텍스트
 
-> 이 파일은 Claude Code가 프로젝트를 이해하도록 돕는 컨텍스트 문서입니다.
-> 저장소 루트(예: 백엔드 레포 루트)에 `CLAUDE.md`로 두면 Claude Code가 자동으로 읽습니다.
-> `【확인 필요】` 표시된 부분은 실제 값으로 채우거나 수정해 주세요.
+> 이 파일은 Claude Code가 프로젝트를 이해하도록 돕는 컨텍스트 문서다.
+> 저장소 루트(`pinly/`)에 있어 백엔드·프론트엔드 어느 쪽 작업에서도 자동으로 읽힌다.
 
 ## 한 줄 소개
 
@@ -15,6 +14,27 @@ pinly는 **웹툰 작가 팀을 위한 이미지 기반 피드백 협업 툴**�
 - pinly는 **이미지 위 위치 기반 코멘트 + 피드백 상태 관리 + 피드백 로그**로 이 문제를 해결한다.
 
 핵심 사용자: 웹툰 작가(팀), 어시스턴트, 편집자/PD. 프로젝트 링크 공유로 외부 협업자도 참여할 수 있다.
+
+## 저장소 구조 (모노레포)
+
+```
+pinly/
+├── CLAUDE.md                  # 이 파일
+├── backend/                   # Spring Boot 4 (Java 21) — API, DB 마이그레이션
+│   └── docs/                  # 백엔드 설계·컨벤션 (conventions, db-schema, canvas-schema)
+├── frontend/                  # React 19 + TypeScript + Vite — 본 프론트엔드
+│   └── frontend-demo/         # 캔버스 스파이크 프로토타입 (React 18, JS). 측정용이며 제품 코드 아님
+└── docs/                      # 백엔드·프론트엔드에 걸친 공용 문서 (캔버스 스파이크 결과, 프론트 구현 계획)
+```
+
+자주 쓰는 명령 (저장소 루트에서):
+
+```bash
+cd backend && ./gradlew test          # 백엔드 테스트 (Docker 데몬 필요)
+npm --prefix frontend run dev         # 프론트엔드 개발 서버
+npm --prefix frontend run build       # 타입 체크 + 빌드
+npm --prefix frontend run lint        # oxlint
+```
 
 ## 화면 구조 (사이트맵)
 
@@ -33,16 +53,18 @@ pinly는 **웹툰 작가 팀을 위한 이미지 기반 피드백 협업 툴**�
 
 - **Project**: 하나의 작업 단위. 이미지, 코멘트, 피드백 로그를 포함. 링크로 공유 가능.
 - **Canvas**: 프로젝트의 작업 공간. 업로드된 이미지 위에 핀/텍스트/드로잉이 얹힌다.
+    - 캔버스에는 **웹툰 전체가 아니라 피드백할 컷·페이지 단위**를 올린다. 기본 크기 1920×1080을 유지한다.
+    - **캔버스 크기 변경 기능은 이후 과제.** 크기는 문서 JSONB의 `stage.width/height`에 있으므로 추가할 때 DB 마이그레이션은 필요 없다.
 - **Comment(Pin)**: 캔버스 특정 좌표에 붙는 피드백. 답글 트리, 해결됨 상태를 가짐.
 - **Feedback(Log item)**: 처리 흐름 관점의 피드백. 상태 = `수정 대기 | 확인 대기 | 확인됨`.
 - **Plan / Subscription**: Free / 유료 플랜. 예: 무료 플랜은 프로젝트 3개 제한(정식 출시 시).
 
 ## 기술 스택
 
-- **백엔드**: Spring Boot (Java) — 이 레포
-- **DB**: PostgreSQL — 관계형 테이블(User, Project, Comment, Feedback, Plan) + **JSONB로 캔버스 상태 저장**(핀 좌표·드로잉 벡터 경로·텍스트 요소). 하이브리드 구조.
-- **프론트엔드**: React
-- **캔버스 렌더링**: react-konva (Konva.js) — 객체 모델 기반. 도형/텍스트/이미지/자유선(Line)을 객체로 다뤄 "지우개 = Line 객체 삭제"를 구현. `toJSON()`으로 직렬화 → JSONB 저장 및 동기화에 재사용.
+- **백엔드** (`backend/`): Spring Boot 4 (Java 21), Gradle, Flyway, Spring Data JPA
+- **DB**: PostgreSQL — 관계형 테이블(User, Project, Comment, Feedback, Plan) + **JSONB로 캔버스 상태 저장**(드로잉 벡터 경로·텍스트·이미지 요소). 핀은 JSONB가 아닌 `comment` 테이블. 하이브리드 구조.
+- **프론트엔드** (`frontend/`): React 19 + TypeScript + Vite, oxlint
+- **캔버스 렌더링**: react-konva 19 / Konva 10 — 객체 모델 기반. 도형/텍스트/이미지/자유선(Line)을 객체로 다뤄 "지우개 = Line 객체 삭제"를 구현. 직렬화 결과를 JSONB 저장에 재사용.
     - **핀(코멘트 마커)은 캔버스 위 DOM 오버레이**(절대위치)로 구현하고 캔버스 transform에 좌표만 동기화 (Figma 코멘트 방식). 말풍선 UI/입력은 일반 React 컴포넌트.
 - **실시간 동기화**: **MVP 범위에서 제외.** 단일 편집 기준으로 구현하고, 저장 충돌은 가볍게 처리(마지막 저장 우선 또는 프로젝트당 편집자 1인 가정). 다중 협업 실시간은 이후 과제.
 - **인증**: JWT + 소셜 로그인(OAuth2) 병행. Spring Security로 발급·검증, 소셜 콜백 후 자체 JWT 발급 패턴.
@@ -61,7 +83,26 @@ pinly는 **웹툰 작가 팀을 위한 이미지 기반 피드백 협업 툴**�
 
 ## 코드/작업 규칙
 
-상세는 `docs/conventions.md`. 아래는 항상 지켜야 하는 요약.
+### 공통
+
+**커밋 컨벤션 — Conventional Commits + 한국어 본문** (상세: `backend/docs/conventions.md` 2장)
+
+```
+<type>(<scope>): <한국어 요약, 50자 이내, 마침표 없음>
+
+<한국어 본문 — 무엇을 왜 바꿨는지>
+```
+
+- type: `feat` `fix` `refactor` `perf` `test` `docs` `build` `ci` `chore`
+- scope: 백엔드 도메인 패키지명 / `global` / `db` / `frontend`, 여러 영역에 걸치면 생략
+- 제목은 "~추가 / ~수정 / ~제거" 형태, 한 커밋에 한 의도
+- Claude 작성 커밋은 푸터에 `Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>`
+
+**응답 언어**: 한국어 (설명·커밋·주석·테스트 이름). 코드 식별자는 영어.
+
+### 백엔드 (`backend/`)
+
+상세는 `backend/docs/conventions.md`. 아래는 항상 지켜야 하는 요약.
 
 **패키지 구조 — 도메인형**
 
@@ -77,32 +118,30 @@ com.kodeongee.pinly
 - 연관관계는 항상 `FetchType.LAZY`, 기본은 단방향
 - Lombok: `@Getter` / `@Builder` / `@NoArgsConstructor(PROTECTED)` / `@RequiredArgsConstructor` 만. `@Data`·`@Setter` 금지
 - 빈 패키지를 미리 만들지 않는다
-
-**커밋 컨벤션 — Conventional Commits + 한국어 본문**
-
-```
-<type>(<scope>): <한국어 요약, 50자 이내, 마침표 없음>
-
-<한국어 본문 — 무엇을 왜 바꿨는지>
-```
-
-- type: `feat` `fix` `refactor` `perf` `test` `docs` `build` `ci` `chore`
-- scope: 도메인 패키지명 / `global` / `db`, 해당 없으면 생략
-- 제목은 "~추가 / ~수정 / ~제거" 형태, 한 커밋에 한 의도
-- Claude 작성 커밋은 푸터에 `Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>`
+- 스키마 변경은 Flyway 마이그레이션으로만. **작성된 마이그레이션은 고치지 않고 새 버전을 추가**한다
 
 **테스트 — JUnit 5 + AssertJ + Testcontainers**
 
 - DB가 필요한 테스트는 **실제 PostgreSQL 컨테이너**를 쓴다. **H2 금지** (JSONB·GIN·`gen_random_uuid()` 미지원)
-- 컨테이너는 `support/TestcontainersConfiguration`에서만 정의하고 `@ServiceConnection`으로 주입 → `@Import`해서 재사용
-- 계층: 도메인·Service 단위는 Mockito, Repository·JSONB·마이그레이션은 `@DataJpaTest`, 웹은 `@WebMvcTest`, 통합은 `@SpringBootTest`
+- JPA 슬라이스 테스트는 `support/PostgresJpaTest`, 통합 테스트는 `@SpringBootTest` + `@Import(TestcontainersConfiguration.class)`
+- 도메인·Service 단위는 Mockito, 웹은 `@WebMvcTest`
 - `@DisplayName`은 한국어 필수, 단정은 AssertJ, 본문은 `// given / // when / // then`
 - 완료 기준: `./gradlew test` 통과 + 새 로직에 대응하는 테스트 존재
-- Testcontainers 테스트는 Docker 데몬이 떠 있어야 한다
+- Spring Boot 4 / Testcontainers 2는 예제 코드와 패키지·좌표가 다르다 → `backend/docs/conventions.md` 「스택 주의사항」 먼저 확인
 
-**응답 언어**: 한국어 (설명·커밋·`@DisplayName`·주석). 코드 식별자는 영어.
+### 프론트엔드 (`frontend/`)
+
+- 캔버스 구현 방향은 `docs/canvas-frontend-plan.md`, 성능 근거는 `docs/canvas-spike/README.md`를 따른다
+- **프론트 타입은 백엔드 엔티티를 따른다** (예: 피드백 상태는 `Comment`가 아니라 `Feedback`에 있고 값은 `PENDING_REVISION` / `PENDING_CONFIRM` / `CONFIRMED`)
+- `frontend/frontend-demo/`는 측정용 프로토타입이다. 제품 코드를 여기서 가져다 붙이지 말고 결론만 반영한다
 
 ## 관련 문서
-- 코드/작업 컨벤션: docs/conventions.md
-- 캔버스 JSONB 스키마: docs/canvas-schema.md
-- DB 스키마: docs/db-schema.md
+
+| 문서 | 위치 |
+|---|---|
+| 코드/작업 컨벤션 | `backend/docs/conventions.md` |
+| DB 스키마 | `backend/docs/db-schema.md` |
+| 캔버스 JSONB 스키마 | `backend/docs/canvas-schema.md` |
+| 캔버스 스파이크 결과 | `docs/canvas-spike/README.md` |
+| 캔버스 프로파일링 절차 | `docs/canvas-spike/profiling.md` |
+| 캔버스 프론트 구현 계획 | `docs/canvas-frontend-plan.md` |
