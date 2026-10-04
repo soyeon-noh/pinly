@@ -14,3 +14,4 @@ dist/
 # 에디터
 .idea/
 .vscode/
+.metadata/
