@@ -23,3 +23,5 @@ export {
   DEMO_PROJECT_ID,
 } from './api/mockCanvasRepository'
 export { canvasKeys, useCanvasQuery } from './api/queries'
+export { CanvasStage } from './stage/CanvasStage'
+export type { BenchResult, PinlyDebugApi } from './debug/installDebugHook'

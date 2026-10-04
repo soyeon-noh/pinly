@@ -1,32 +1,17 @@
-# React + TypeScript + Vite
+# pinly frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+웹툰 원고 피드백 캔버스. React 19 + TypeScript + Vite, 캔버스는 react-konva.
 
-Currently, two official plugins are available:
-
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
-
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```bash
+npm run dev        # 개발 서버 — / 는 데모 캔버스로 이동
+npm run build      # 타입 체크 + 빌드
+npm run lint       # oxlint
+npm test           # Vitest 단위 테스트 (src/**/*.test.ts)
+npm run e2e        # Playwright E2E (시스템 Chrome)
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+- 구현 계획·폴더 구조·의존 방향: [`docs/canvas-frontend-plan.md`](../docs/canvas-frontend-plan.md)
+- 성능 근거와 측정 절차: [`docs/canvas-spike/`](../docs/canvas-spike/)
+- 백엔드 API 가 생기기 전까지 저장소는 localStorage 목이다 (`src/app/repositories.ts`).
+  목 데이터를 비우려면 브라우저 콘솔에서 `localStorage.clear()`.
+- `frontend-demo/` 는 측정용 스파이크다. 제품 코드를 가져오지 않는다.
