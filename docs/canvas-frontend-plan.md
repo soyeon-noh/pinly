@@ -177,11 +177,11 @@ screenToStage(p, viewport) = { x: (p.x - vx) / scale, y: (p.y - vy) / scale }
 일수는 1인 기준 person-day.
 
 ### Phase 0 — 기반 (2일)
-- [ ] 라우터, QueryClient, zustand, nanoid, Vitest, Playwright 설치·설정 (Playwright 는 시스템 Chrome 사용, 데모 폴더는 린트 제외)
-- [ ] `features/canvas/model/types.ts` — 스키마 타입 (`CanvasDocument`, `ImageElement`, `TextElement`, `DrawingElement`)
-- [ ] `CanvasRepository` / `CommentRepository` / `FeedbackRepository` 인터페이스 + localStorage 목 구현 + 기능별 프로바이더
-- [ ] DEV 전용 `window.__pinly` 계측 훅 (profiling.md 레시피가 그대로 돌아야 함)
-- [ ] 스캐폴드 샘플 코드 제거, `CanvasPage` 뼈대
+- [x] 라우터, QueryClient, zustand, nanoid, Vitest, Playwright 설치·설정 (Playwright 는 시스템 Chrome 사용, 데모 폴더는 린트 제외)
+- [x] `features/canvas/model/types.ts` — 스키마 타입 (`CanvasDocument`, `ImageElement`, `TextElement`, `DrawingElement`)
+- [x] `CanvasRepository` / `CommentRepository` / `FeedbackRepository` 인터페이스 + localStorage 목 구현 + 기능별 프로바이더
+- [x] DEV 전용 `window.__pinly` 계측 훅 (profiling.md 레시피가 그대로 돌아야 함)
+- [x] 스캐폴드 샘플 코드 제거, `CanvasPage` 뼈대
 
 **완료 기준**: `npm run build` · `npm run lint` · `npm test` 통과, `/projects/demo/canvases/demo` 진입 시 빈 아트보드 표시
 
