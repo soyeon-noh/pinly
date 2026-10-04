@@ -6,7 +6,11 @@
   --mint-b: #00e4dc;
 
   --surface: #ffffff;
+  /* 툴바 바탕·버튼 hover */
+  --surface-2: #f2f4f0;
   --line: #e0e4dc;
+  /* 키보드 포커스 표시 — 민트는 흰 바탕에서 대비가 부족해 청록 쪽으로 어둡게 */
+  --focus: #0b8f86;
   /* 아트보드 바깥 바닥. 흰 아트보드와 구분되도록 차콜 쪽으로 기운 회색 */
   --canvas-ground: #eceee9;
 

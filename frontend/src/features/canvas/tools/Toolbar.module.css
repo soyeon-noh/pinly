@@ -1,0 +1,35 @@
+.toolbar {
+  display: flex;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 10px;
+  background: var(--surface-2);
+}
+
+.tool {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: none;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--ink-2);
+  cursor: pointer;
+}
+
+.tool:hover {
+  background: var(--surface);
+  color: var(--ink);
+}
+
+.tool:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 1px;
+}
+
+.tool[aria-pressed='true'] {
+  background: var(--ink);
+  color: var(--surface);
+}
