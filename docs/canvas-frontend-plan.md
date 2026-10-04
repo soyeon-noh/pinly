@@ -186,12 +186,19 @@ screenToStage(p, viewport) = { x: (p.x - vx) / scale, y: (p.y - vy) / scale }
 **완료 기준**: `npm run build` · `npm run lint` · `npm test` 통과, `/projects/demo/canvases/demo` 진입 시 빈 아트보드 표시
 
 ### Phase 1 — 캔버스 셸 (3일)
-- [ ] 컨테이너 크기 추적 Stage, 레이어 4단 구성
-- [ ] `viewportStore` — 포인터 기준 ⌘/Ctrl+휠 줌, 트랙패드 두 손가락 팬, 줌 범위 8%~800%
-- [ ] 손 툴 + `Space` 누른 동안 임시 손 툴, 팬·줌 중 ContentLayer `listening(false)`
-- [ ] 줌 컨트롤: 아트보드에 맞추기 / 100% / 확대·축소
-- [ ] `Tool` 인터페이스 + 디스패처, 툴바, 단축키 `V H P E T C`
-- [ ] Vitest: 좌표 투영 왕복, 줌 기준점 유지
+- [x] 컨테이너 크기 추적 Stage, 레이어 4단 구성
+- [x] `viewportStore` — 포인터 기준 ⌘/Ctrl+휠 줌, 트랙패드 두 손가락 팬, 줌 범위 8%~800%
+- [x] 손 툴 + `Space` 누른 동안 임시 손 툴, 팬·줌 중 ContentLayer `listening(false)`
+- [x] 줌 컨트롤: 아트보드에 맞추기 / 100% / 확대·축소
+- [x] `Tool` 인터페이스 + 디스패처, 툴바, 단축키 — **단축키는 각 툴이 선언한다.** Phase 1 은 `V`(선택)·`H`(손), 나머지(`P E T C`)는 해당 툴이 생기는 Phase 에서 함께 붙는다
+- [x] Vitest: 좌표 투영 왕복, 줌 기준점 유지
+
+구현하며 정한 것:
+- 처음 열 때 한 번만 화면에 맞추고, 이후 창 크기가 바뀌어도 사용자가 정한 줌·위치를 유지한다
+- 단축키는 물리 키 위치(`KeyboardEvent.code`)로 판별 — 한글 입력 상태에서 `V` 는 `key` 가 `ㅍ` 이다
+- 줌 단축키: `⌘/Ctrl +`·`⌘/Ctrl −` 확대·축소, `Shift 1` 화면에 맞추기, `Shift 0` 100%. 가운데 버튼 드래그는 어떤 툴이든 이동
+- 드래그가 캔버스 밖으로 나가도 끊기지 않도록 포인터를 누를 때 DOM 포인터 캡처를 건다 (Konva 는 캔버스 요소에만 리스너를 건다)
+- 툴 분배기는 포인터를 누른 순간의 툴에 시퀀스를 고정한다 → 스파이크 F-7 을 구조로 막음
 
 **완료 기준**: 줌 전후로 포인터 아래 stage 좌표가 1px 이내로 유지된다
 
@@ -255,6 +262,8 @@ screenToStage(p, viewport) = { x: (p.x - vx) / scale, y: (p.y - vy) / scale }
 
 ### Phase 8 — 성능·QA (6일)
 - [ ] profiling.md 레시피를 Playwright 스크립트로 자동화 (`npm run perf`)
+- [ ] Safari 트랙패드 핀치 줌 — Safari 는 핀치를 ⌘/Ctrl 휠이 아니라 `gesturestart/change` 로 보낸다 (Phase 1 은 Chrome·Firefox 방식만 지원)
+- [ ] 번들 코드 분할 — Phase 0 부터 빌드가 500 kB 초과 경고
 - [ ] 성능 게이트 확인 → 넘으면 대응 (tension 0, 뷰포트 밖 요소 `visible(false)`, 이미지 캐싱)
 - [ ] 브라우저 확인: Chrome, Safari, Edge (Firefox 는 트랙패드 제스처만 점검)
 - [ ] 이벤트 순서 점검표: 툴 × 동작 조합 (핀 클릭, 텍스트 편집 중 단축키, 드래그 중 툴 전환 등)

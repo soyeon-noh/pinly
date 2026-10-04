@@ -4,6 +4,8 @@
 
 ## 0. 원칙
 
+- **본 프로젝트(`frontend/`)는 레이어가 4개다** — `artboard-layer` / `content-layer` / `draft-layer` / `ui-layer`.
+  드로잉·텍스트 렌더 비용은 `content-layer` 에서 잰다. 스파이크(`frontend-demo/`)는 레이어가 하나뿐이었다.
 - **rAF 기반 FPS 카운터는 믿지 않는다.** 백그라운드 탭·임베디드 브라우저에서는 `requestAnimationFrame` 이
   스로틀링되어 1~6 fps 처럼 엉뚱한 값이 나온다. 대신 `layer.draw()` 를 **동기 호출해 시간을 잰다.**
 - **워밍업 후 평균.** 첫 몇 번은 JIT·캐시 영향이 커서 버린다 (워밍업 5회 → 측정 20~30회).
@@ -16,11 +18,14 @@
 
 ```js
 window.__pinly = {
-  stage: () => stageRef.current,   // Konva.Stage
-  doc:   () => doc,                // 현재 캔버스 JSONB 문서
-  bench: (runs = 30) => { /* layer.draw() 평균 ms */ },
+  stage:    () => stageRef.current,   // Konva.Stage
+  doc:      () => doc,                // 현재 캔버스 JSONB 문서
+  viewport: () => viewport,           // { x, y, scale } — 화면 좌표 = stage 좌표 × scale + x/y
+  bench: (runs = 30) => { /* 모든 레이어 draw() 평균 ms */ },
 }
 ```
+
+본 프로젝트 구현: `frontend/src/features/canvas/debug/installDebugHook.ts`
 
 기본 사용:
 
@@ -50,7 +55,8 @@ const bench = (fn, runs = 25) => {
   return +((performance.now() - t) / runs).toFixed(1)
 }
 const stage = window.__pinly.stage()
-const layer = stage.getLayers()[0]
+// 본 프로젝트: 드로잉·텍스트가 있는 레이어. 스파이크(frontend-demo)에서는 stage.getLayers()[0]
+const layer = stage.findOne('.content-layer')
 ```
 
 ## 4. 측정 레시피
