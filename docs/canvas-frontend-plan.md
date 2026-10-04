@@ -39,43 +39,53 @@
 | 라우팅 | react-router | `/projects/:projectId/canvases/:canvasId` |
 | ID 생성 | nanoid | 스키마 원칙 4 — 클라이언트 생성 ID |
 | 스타일 | CSS Modules | 의존성 추가 없음 |
-| 단위 테스트 | Vitest + Testing Library | 순수 로직(좌표 변환, 직렬화, 단순화, 히스토리)과 DOM 오버레이 |
-| 캔버스 E2E | Playwright | Konva 는 jsdom 에서 제대로 안 그려진다. 그리기·팬/줌·성능 계측은 실제 브라우저로 |
+| 단위 테스트 | Vitest + Testing Library | 순수 로직(좌표 변환, 직렬화, 단순화, 히스토리)과 DOM 오버레이. 소스 옆 `*.test.ts` |
+| 캔버스 E2E | Playwright (시스템 Chrome) | Konva 는 jsdom 에서 제대로 안 그려진다. 그리기·팬/줌·성능 계측은 실제 브라우저로. `frontend/e2e/` |
 | 린트 | oxlint (스캐폴드 기본) | |
 
 ---
 
 ## 2. 폴더 구조
 
-백엔드의 도메인형 패키지와 같은 발상으로 **기능 단위**로 나눈다.
+백엔드의 도메인형 패키지와 같은 발상으로 **기능 단위**로 나눈다. 기능 이름은 백엔드 도메인과 맞춘다.
 
 ```
-frontend/src/
-├── app/                      # 라우터, QueryClient, 전역 프로바이더
-├── pages/
-│   └── CanvasPage.tsx        # 스테이지 + 툴바 + 사이드 패널 조립
-├── shared/
-│   ├── api/                  # fetch 클라이언트, 에러 타입
-│   ├── lib/                  # geometry(좌표 변환), simplify(RDP), debounce
-│   └── ui/                   # Button, Chip 등 공통 컴포넌트
-└── features/
-    ├── canvas/
-    │   ├── model/            # types.ts(스키마 타입), documentStore, historyStore, serialize
-    │   ├── viewport/         # viewportStore, useWheelZoom, fitToArtboard
-    │   ├── tools/            # Tool 인터페이스 + select / hand / draw / erase / text / image
-    │   ├── stage/            # CanvasStage, 레이어 구성, ElementNode(image/text/drawing)
-    │   ├── overlay/          # stage↔screen 투영, TextEditorOverlay
-    │   ├── persistence/      # CanvasRepository 인터페이스, mock / http 구현, useAutosave
-    │   └── debug/            # DEV 전용 window.__pinly 계측 훅
-    ├── asset/                # presigned 업로드, 다운로드 URL 캐시
-    ├── comment/              # PinLayer, Thread, CommentRepository
-    └── feedback/             # StatusChip, 할 일로 열기, FeedbackPanel, FeedbackRepository
+frontend/
+├── e2e/                          # Playwright E2E
+└── src/
+    ├── app/                      # 라우터, QueryClient, 저장소 프로바이더. 조립만 한다
+    ├── pages/
+    │   └── CanvasPage.tsx        # 기능들을 끼워 맞추는 곳 — 여러 기능을 동시에 import 하는 유일한 층
+    ├── shared/
+    │   ├── api/                  # API 에러 타입, 목 저장소용 JSON 저장 헬퍼, (이후) fetch 클라이언트
+    │   ├── lib/                  # geometry(좌표 변환), simplify(RDP), debounce
+    │   └── ui/                   # Button, Chip 등 공통 컴포넌트
+    └── features/
+        ├── canvas/
+        │   ├── model/            # types.ts(스키마 타입), documentStore, historyStore, serialize
+        │   ├── api/              # CanvasRepository, 이미지 업로드(asset), mock / http 구현, 쿼리 훅
+        │   ├── viewport/         # viewportStore, useWheelZoom, fitToArtboard
+        │   ├── tools/            # Tool 인터페이스 + select / hand / draw / erase / text / image
+        │   ├── stage/            # CanvasStage, 레이어 구성, ElementNode(image/text/drawing)
+        │   ├── overlay/          # TextEditorOverlay
+        │   └── debug/            # DEV 전용 window.__pinly 계측 훅
+        ├── comment/
+        │   ├── model/            # Pin / Reply 타입
+        │   └── api/              # CommentRepository
+        └── feedback/
+            ├── model/            # FeedbackStatus, Feedback / FeedbackLog 타입
+            └── api/              # FeedbackRepository
 ```
 
 규칙:
+- **의존 방향은 `feedback → comment → canvas → shared` 한 방향만.** `pages`·`app` 은 모두를 쓸 수 있고, 아무도 `pages`·`app` 을 import 하지 않는다.
+  - 거꾸로 필요한 것은 아래쪽 기능이 **끼울 자리(슬롯)** 만 연다. 예) 캔버스 툴바의 댓글 툴 → canvas 가 툴 등록 자리를 열고 comment 의 툴을 `CanvasPage` 가 끼운다. 스레드 안의 "할 일로 열기"·상태 칩 → comment 의 `Thread` 가 render prop 을 열고 feedback 컴포넌트를 `CanvasPage` 가 끼운다.
+  - 핀과 피드백의 연결은 피드백 쪽 데이터(`commentId`)로 찾는다. 핀 API 응답에 피드백 정보를 넣지 않는다.
 - 기능 간 import 는 각 기능의 `index.ts` 공개 API 로만 한다 (백엔드의 "Service → Service 로만" 과 같은 의도).
+- 이미지 업로드(asset)는 별도 기능으로 나누지 않고 canvas 안에 둔다. 백엔드 `Asset` 도 `domain/canvas` 에 있고, 지금 이미지를 쓰는 화면이 캔버스뿐이다.
+- 단위 테스트는 소스 옆 `*.test.ts(x)`, 브라우저 E2E 는 `frontend/e2e/`.
 - Konva 노드 참조와 진행 중 스트로크 같은 **고빈도 상태는 React state 에 넣지 않는다.**
-- 빈 폴더를 미리 만들지 않는다.
+- 빈 폴더를 미리 만들지 않는다. 위 트리는 최종 모습이고, 폴더는 필요해지는 Phase 에서 만든다.
 
 ---
 
@@ -136,7 +146,7 @@ pointerup   → RDP 단순화(ε = 0.75 stage px, 반복 구현)
 stageToScreen(p, viewport) = { x: p.x * scale + vx, y: p.y * scale + vy }
 screenToStage(p, viewport) = { x: (p.x - vx) / scale, y: (p.y - vy) / scale }
 ```
-핀, 텍스트 편집기, 스레드 팝오버가 모두 이 함수만 쓴다 (F-6). Vitest 로 왕복 변환을 검증한다.
+`shared/lib/geometry` 에 두고 핀, 텍스트 편집기, 스레드 팝오버가 모두 이 함수만 쓴다 (F-6). Vitest 로 왕복 변환을 검증한다.
 
 ### 3-6. 저장
 
@@ -146,11 +156,18 @@ screenToStage(p, viewport) = { x: (p.x - vx) / scale, y: (p.y - vy) / scale }
 - 저장 상태 표시: `저장됨 / 저장 중 / 저장 실패(재시도)`.
 - 직렬화 시 **1 MB 초과면 콘솔 경고 + 계측 로그.** 넘는 사례가 실제로 나오면 그때 변경분 전송을 설계한다.
 
-### 3-7. 아트보드 크기 (F-2)
+### 3-7. 아트보드 크기 = 원고 크기 (F-2)
 
-백엔드 기본값 1920×1080 은 웹툰 세로 원고와 맞지 않는다.
-**첫 이미지를 올리면 `stage.width/height` 를 이미지 크기(+여백)로 맞추고**, 이후 이미지가 바깥으로 나가면 확장한다.
-문서 필드 값만 바뀌므로 스키마 버전·마이그레이션 변경은 필요 없다.
+| 상황 | 동작 |
+|---|---|
+| 빈 캔버스 | 1920×1080 (백엔드 기본값 그대로) |
+| **첫 이미지(원고) 업로드** | `stage.width/height` 를 원고 원본 크기로 맞추고 원고를 (0, 0)·배율 1에 둔다. **한 번만** |
+| 두 번째 이후 이미지(참고 자료) | 판 크기 변경 없음. 판 밖에 놓여도 된다 |
+| 다른 요소가 판 밖으로 나감 | 판을 늘리지 않는다 |
+
+- 핀 좌표가 곧 원고 픽셀 좌표가 된다 → 같은 크기의 수정본으로 바꿔 끼워도 핀이 같은 지점을 가리킨다. 수정 대기 → 확인 대기 흐름의 핵심.
+- 판 밖으로 나갈 때마다 확장하는 규칙은 넣지 않는다. 원고 좌표 기준이 흔들리고, 판이 왜 커졌는지 사용자가 알기 어렵다.
+- 사용자가 직접 크기를 바꾸는 UI 는 이후 과제. 문서 필드 값만 바뀌므로 스키마 버전·마이그레이션 변경은 필요 없다.
 
 ---
 
@@ -160,9 +177,9 @@ screenToStage(p, viewport) = { x: (p.x - vx) / scale, y: (p.y - vy) / scale }
 일수는 1인 기준 person-day.
 
 ### Phase 0 — 기반 (2일)
-- [ ] 라우터, QueryClient, zustand, nanoid, Vitest, Playwright 설치·설정
+- [ ] 라우터, QueryClient, zustand, nanoid, Vitest, Playwright 설치·설정 (Playwright 는 시스템 Chrome 사용, 데모 폴더는 린트 제외)
 - [ ] `features/canvas/model/types.ts` — 스키마 타입 (`CanvasDocument`, `ImageElement`, `TextElement`, `DrawingElement`)
-- [ ] `CanvasRepository` / `CommentRepository` / `FeedbackRepository` 인터페이스 + localStorage 목 구현
+- [ ] `CanvasRepository` / `CommentRepository` / `FeedbackRepository` 인터페이스 + localStorage 목 구현 + 기능별 프로바이더
 - [ ] DEV 전용 `window.__pinly` 계측 훅 (profiling.md 레시피가 그대로 돌아야 함)
 - [ ] 스캐폴드 샘플 코드 제거, `CanvasPage` 뼈대
 
@@ -210,12 +227,12 @@ screenToStage(p, viewport) = { x: (p.x - vx) / scale, y: (p.y - vy) / scale }
 ### Phase 5 — 이미지 (4일)
 - [ ] 업로드 흐름: presigned 요청 → S3 PUT(진행률) → asset 등록 → `image` 요소 추가 (목에서는 objectURL)
 - [ ] 로드 시 문서의 `s3Key` 들을 모아 **다운로드 URL 일괄 요청**, 만료 전 갱신 캐시
-- [ ] 첫 이미지 기준 아트보드 크기 조정 (3-7)
+- [ ] 첫 이미지(원고) 업로드 시 한 번만 아트보드를 원고 크기로 맞추고 (0, 0)·배율 1 배치 (3-7)
 - [ ] 드래그 앤 드롭 / 붙여넣기 업로드
 - [ ] 큰 이미지 방어: 한 변이 브라우저 캔버스 한계(16,384px)를 넘으면 업로드 거부 + 안내
 - [ ] 계측: 실제 원고 10장 투입 후 탭 메모리 (산정 보고서 미지수 1)
 
-**완료 기준**: 세로 원고 업로드 → 아트보드가 원고에 맞춰짐 → 새로고침 후 복원
+**완료 기준**: 원고 업로드 → 아트보드가 원고 크기와 같아짐 → 참고 이미지를 판 밖에 추가해도 판 크기 유지 → 새로고침 후 복원
 
 ### Phase 6 — 핀 코멘트 (4일)
 - [ ] `PinLayer` — 투영 함수로 위치 계산, 팬·줌에 즉시 추종
@@ -284,7 +301,7 @@ screenToStage(p, viewport) = { x: (p.x - vx) / scale, y: (p.y - vy) / scale }
 | 5 | POST | `/api/projects/{projectId}/assets/upload-url` | `{ fileName, contentType, byteSize }` | `{ s3Key, uploadUrl, expiresAt }` |
 | 5 | POST | `/api/projects/{projectId}/assets` | `{ s3Key, contentType, byteSize }` | `{ id, s3Key }` |
 | 5 | POST | `/api/projects/{projectId}/assets/download-urls` | `{ s3Keys: [] }` | `{ urls: { [s3Key]: url }, expiresAt }` |
-| 6 | GET | `/api/canvases/{canvasId}/comments` | | 핀 목록 (답글·연결 피드백 요약 포함) |
+| 6 | GET | `/api/canvases/{canvasId}/comments` | | 핀 목록 (답글 포함. 연결된 피드백은 피드백 API 의 `commentId` 로 찾는다) |
 | 6 | POST | `/api/canvases/{canvasId}/comments` | `{ body, posX, posY }` | 핀 |
 | 6 | POST | `/api/comments/{commentId}/replies` | `{ body }` | 답글 |
 | 6 | PATCH | `/api/comments/{commentId}` | `{ body?, posX?, posY? }` | 코멘트 |
@@ -301,7 +318,7 @@ screenToStage(p, viewport) = { x: (p.x - vx) / scale, y: (p.y - vy) / scale }
 진행을 막지는 않는다. 괄호 안 기본값으로 진행하고, 다르게 정하면 해당 Phase 에서 반영한다.
 
 1. **좌표 정수화를 스키마 규칙으로 확정할지** (확정 → `backend/docs/canvas-schema.md` §4-3 에 "points 는 정수" 추가. 값 타입은 그대로 number 라 schemaVersion 은 1 유지)
-2. **아트보드 크기 정책** (첫 이미지 기준 자동 조정. 백엔드 기본값 1920×1080 은 그대로 둔다)
+2. ~~아트보드 크기 정책~~ → **확정**: 첫 원고 업로드 시 한 번만 원고 크기로 맞춘다 (3-7). 백엔드 기본값 1920×1080 은 그대로
 3. **"할 일로 열기" 시 어느 피드백 로그에 넣을지** (프로젝트의 첫 번째 로그, 없으면 "기본 로그" 자동 생성)
 4. **해결됨과 피드백 상태의 관계** (독립. `CONFIRMED` 로 바꿔도 핀은 자동 해결되지 않는다 — conventions.md 예시의 동기화는 Phase 7 에서 백엔드와 함께 결정)
 5. **실시간 동기화 제외** 유지 여부 (유지. 바뀌면 이 계획 전체를 다시 산정)
@@ -310,7 +327,7 @@ screenToStage(p, viewport) = { x: (p.x - vx) / scale, y: (p.y - vy) / scale }
 
 ## 7. 작업 규칙
 
-- 커밋은 백엔드와 같은 Conventional Commits + 한국어. scope 는 `canvas` / `asset` / `comment` / `feedback` / `shared`.
+- 커밋은 백엔드와 같은 Conventional Commits + 한국어. scope 는 루트 `CLAUDE.md` 대로 `frontend`.
 - 한 Phase 안에서도 체크리스트 항목 단위로 커밋한다.
 - 각 Phase 완료 기준에는 항상 `npm run build` · `npm run lint` · `npm test` 통과가 포함된다.
-- `frontend/` 는 아직 git 저장소가 아니다. **Phase 0 시작 전에 `git init`** 한다.
+- 저장소는 `pinly/` 루트의 모노레포 하나다. Phase 단위로 브랜치를 따서 작업한다.
