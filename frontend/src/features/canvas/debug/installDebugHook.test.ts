@@ -18,6 +18,18 @@ describe('installDebugHook', () => {
     expect(window.__pinly?.doc()).toBe(document)
   })
 
+  it('뷰포트를 넘겨주면 window.__pinly.viewport() 로 읽을 수 있다', () => {
+    // when
+    installDebugHook({
+      getStage: () => null,
+      getDocument: () => null,
+      getViewport: () => ({ x: 10, y: 20, scale: 0.5 }),
+    })
+
+    // then
+    expect(window.__pinly?.viewport()).toEqual({ x: 10, y: 20, scale: 0.5 })
+  })
+
   it('Stage 가 아직 없으면 bench 는 null', () => {
     // when
     installDebugHook({ getStage: () => null, getDocument: () => null })

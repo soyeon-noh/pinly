@@ -4,15 +4,23 @@
   height: 100%;
 }
 
+/* 왼쪽 정체성 · 가운데 툴바 · 오른쪽(이후 저장 상태·공유) */
 .header {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  gap: 12px;
-  height: 48px;
+  height: 52px;
   padding: 0 16px;
   border-bottom: 1px solid var(--line);
   background: var(--surface);
   flex: 0 0 auto;
+}
+
+.identity {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
 }
 
 .brand {
@@ -29,12 +37,16 @@
 
 .title {
   margin: 0;
+  overflow: hidden;
   font-size: 14px;
   font-weight: 500;
   color: var(--ink-2);
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .workspace {
+  position: relative;
   flex: 1;
   min-height: 0;
 }

@@ -4,4 +4,7 @@
   height: 100%;
   overflow: hidden;
   background: var(--canvas-ground);
+  /* 드래그 중 헤더 글자가 선택되거나 터치 스크롤이 끼어들지 않게 */
+  user-select: none;
+  touch-action: none;
 }

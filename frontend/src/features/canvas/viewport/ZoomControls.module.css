@@ -1,0 +1,57 @@
+.controls {
+  position: absolute;
+  right: 16px;
+  bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  box-shadow: 0 2px 10px rgb(41 44 40 / 0.08);
+}
+
+.button,
+.level {
+  height: 30px;
+  border: none;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--ink-2);
+  cursor: pointer;
+}
+
+.button {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  padding: 0;
+}
+
+.level {
+  min-width: 52px;
+  padding: 0 6px;
+  font: inherit;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.button:hover,
+.level:hover {
+  background: var(--surface-2);
+  color: var(--ink);
+}
+
+.button:focus-visible,
+.level:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 1px;
+}
+
+.divider {
+  width: 1px;
+  height: 18px;
+  margin: 0 2px;
+  background: var(--line);
+}

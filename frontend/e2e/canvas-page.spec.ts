@@ -16,7 +16,8 @@ test('루트로 들어오면 데모 캔버스로 이동해 빈 아트보드를 �
   // then
   await expect(page).toHaveURL(/\/projects\/demo\/canvases\/demo$/)
   await expect(page.getByRole('heading', { name: '데모 캔버스' })).toBeVisible()
-  await expect(page.getByTestId('canvas-stage').locator('canvas')).toBeVisible()
+  // 레이어마다 <canvas> 가 하나씩 생긴다 (artboard·content·draft·ui)
+  await expect(page.getByTestId('canvas-stage').locator('canvas')).toHaveCount(4)
 
   await page.waitForFunction(() => (window as PinlyDebugWindow).__pinly?.stage() != null)
   const state = await page.evaluate(() => {
