@@ -203,16 +203,26 @@ screenToStage(p, viewport) = { x: (p.x - vx) / scale, y: (p.y - vy) / scale }
 **완료 기준**: 줌 전후로 포인터 아래 stage 좌표가 1px 이내로 유지된다
 
 ### Phase 2 — 그리기 (3일)
-- [ ] DraftLayer 직접 갱신 방식의 그리기 툴
-- [ ] 확정 파이프라인: RDP(반복 구현) → 정수 반올림 → 오프셋 정규화 → 커밋
-- [ ] 3색 × 2굵기 선택 UI (브랜드 민트 포함)
-- [ ] 지우개 = 선 클릭 시 요소 삭제, `hitStrokeWidth` 로 얇은 선도 잘 잡히게
-- [ ] Vitest: RDP 결과, 반올림, 오프셋 정규화 / Playwright: 드래그로 선 1개 생성 → 문서에 `drawing` 1개
+- [x] DraftLayer 직접 갱신 방식의 그리기 툴
+- [x] 확정 파이프라인: RDP(반복 구현) → 정수 반올림 → 오프셋 정규화 → 커밋
+- [x] 3색 × 2굵기 선택 UI (브랜드 민트 포함)
+- [x] 지우개 = 선 클릭 시 요소 삭제, `hitStrokeWidth` 로 얇은 선도 잘 잡히게
+- [x] Vitest: RDP 결과, 반올림, 오프셋 정규화 / Playwright: 드래그로 선 1개 생성 → 문서에 `drawing` 1개
+
+구현하며 정한 것:
+- **`documentStore` 를 Phase 3 에서 당겨왔다** — 그린 선을 넣을 곳이 필요했다. 불러오기·추가·삭제만 두고 히스토리·저장은 Phase 3 에서 붙인다. 그래서 Phase 2 까지는 새로고침하면 그린 선이 사라진다
+- 펜 색: 빨강 `#F03E3E`(교정 표준, 기본값) / 민트 `#1AE46E` / 차콜 `#292C28`. 굵기: 4 / 12 stage px. 그리기 툴일 때만 캔버스 위 가운데에 뜬다
+- 클릭만 하면 같은 점 두 개로 점을 찍는다 (둥근 끝 모양)
+- 화면에서 1px 미만으로 움직인 점은 버린다
+- 지우개는 누른 채 문지르면 지나가는 선을 모두 지운다. 텍스트·이미지는 지우지 않는다 (선택 후 Delete, Phase 4)
+- 히트 폭은 화면 12px(선 양쪽 6px) 기준으로, 줌이 끝난 뒤 한 번 맞춘다 — 축소해도 얇은 선을 집을 수 있다
+- 완료 기준 검증: 개발 빌드에서만 `React.Profiler` 로 캔버스 커밋 수를 세 `__pinly.commits()` 로 노출하고 E2E 로 확인
+- RDP 최악 입력(지그재그 2만 점)은 0.7초. 실제 선은 1px 미만 이동을 버리므로 1분을 그려도 수천 점 수준
 
 **완료 기준**: 그리는 중 React 커밋 0회(React Profiler 확인), 손을 떼면 1회
 
 ### Phase 3 — 문서·히스토리·저장 (5일)
-- [ ] `documentStore` 액션 + 커밋 경계
+- [ ] `documentStore` 에 `updateElement`·`reorder` 추가 + 커밋 경계 (불러오기·추가·삭제는 Phase 2 에서 완료)
 - [ ] `historyStore` — undo/redo (`⌘Z` / `⇧⌘Z`), 텍스트 편집 중에는 브라우저 기본 동작에 양보
 - [ ] `serialize` / `parse` — `schemaVersion` 확인, 모르는 버전이면 읽기 전용으로 열기
 - [ ] `useAutosave` — 디바운스, 이탈 시 저장, 409 충돌 처리, 저장 상태 표시
@@ -326,7 +336,7 @@ screenToStage(p, viewport) = { x: (p.x - vx) / scale, y: (p.y - vy) / scale }
 
 진행을 막지는 않는다. 괄호 안 기본값으로 진행하고, 다르게 정하면 해당 Phase 에서 반영한다.
 
-1. **좌표 정수화를 스키마 규칙으로 확정할지** (확정 → `backend/docs/canvas-schema.md` §4-3 에 "points 는 정수" 추가. 값 타입은 그대로 number 라 schemaVersion 은 1 유지)
+1. ~~좌표 정수화를 스키마 규칙으로 확정할지~~ → **확정** (Phase 2): `backend/docs/canvas-schema.md` §4-3 에 "x/y/points 는 정수" 추가. 값 타입은 그대로 number 라 schemaVersion 은 1 유지
 2. ~~아트보드 크기 정책~~ → **확정**: 첫 원고 업로드 시 한 번만 원고 크기로 맞춘다 (3-7). 백엔드 기본값 1920×1080 은 그대로
 3. **"할 일로 열기" 시 어느 피드백 로그에 넣을지** (프로젝트의 첫 번째 로그, 없으면 "기본 로그" 자동 생성)
 4. **해결됨과 피드백 상태의 관계** (독립. `CONFIRMED` 로 바꿔도 핀은 자동 해결되지 않는다 — conventions.md 예시의 동기화는 Phase 7 에서 백엔드와 함께 결정)
