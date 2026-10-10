@@ -3,6 +3,7 @@ import { useParams } from 'react-router'
 import {
   CanvasStage,
   createBuiltInTools,
+  DrawStylePicker,
   Toolbar,
   useCanvasQuery,
   useCanvasShortcuts,
@@ -47,7 +48,8 @@ export function CanvasPage() {
         <Toolbar tools={tools} />
       </header>
       <main className={styles.workspace}>
-        <CanvasStage document={canvas.data.document} tools={tools} />
+        <CanvasStage initialDocument={canvas.data.document} tools={tools} />
+        <DrawStylePicker />
         <ZoomControls />
       </main>
     </div>

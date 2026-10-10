@@ -52,3 +52,22 @@ export function PlusIcon() {
     </svg>
   )
 }
+
+export function PenIcon() {
+  return (
+    <svg {...base}>
+      <path d="M4 20l1.2-4.4L16.6 4.2a2 2 0 0 1 2.8 0l.4.4a2 2 0 0 1 0 2.8L8.4 18.8 4 20Z" />
+      <path d="M14.5 6.3l3.2 3.2" />
+    </svg>
+  )
+}
+
+export function EraserIcon() {
+  return (
+    <svg {...base}>
+      <path d="M7.5 20H20" />
+      <path d="M4.7 15.3a1.8 1.8 0 0 1 0-2.5l8.6-8.6a1.8 1.8 0 0 1 2.5 0l3.9 3.9a1.8 1.8 0 0 1 0 2.5L12 18.4a1.8 1.8 0 0 1-1.3.6H8.5a1.8 1.8 0 0 1-1.3-.6l-2.5-2.5Z" />
+      <path d="M9.6 7.9l6.4 6.4" />
+    </svg>
+  )
+}

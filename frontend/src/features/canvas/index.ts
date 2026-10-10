@@ -25,6 +25,7 @@ export {
 export { canvasKeys, useCanvasQuery } from './api/queries'
 export { CanvasStage } from './stage/CanvasStage'
 export { createBuiltInTools } from './tools/builtInTools'
+export { DrawStylePicker } from './tools/DrawStylePicker'
 export { Toolbar } from './tools/Toolbar'
 export { useCanvasShortcuts } from './tools/useCanvasShortcuts'
 export type { Tool, ToolContext, ToolId, ToolPointerEvent } from './tools/types'

@@ -14,6 +14,8 @@ export interface PinlyDebugApi {
   doc(): CanvasDocument | null
   /** 현재 뷰 변환 (화면 좌표 = stage 좌표 × scale + x/y) */
   viewport(): Viewport | null
+  /** 캔버스 서브트리의 React 커밋 누적 횟수. 그리는 중 0회인지 확인할 때 쓴다 */
+  commits(): number
   /** 모든 레이어 draw() 평균 시간. 워밍업 5회 후 runs 회 측정. Stage 가 없으면 null */
   bench(runs?: number): BenchResult | null
 }
@@ -34,6 +36,7 @@ export function installDebugHook(source: {
   getStage: () => Konva.Stage | null
   getDocument: () => CanvasDocument | null
   getViewport?: () => Viewport
+  getCommitCount?: () => number
 }): () => void {
   if (!import.meta.env.DEV) return () => {}
 
@@ -41,6 +44,7 @@ export function installDebugHook(source: {
     stage: source.getStage,
     doc: source.getDocument,
     viewport: () => source.getViewport?.() ?? null,
+    commits: () => source.getCommitCount?.() ?? 0,
     bench(runs = 30) {
       const stage = source.getStage()
       if (!stage) return null
